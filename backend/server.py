@@ -14,24 +14,9 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Set up Google Cloud credentials
-os.environ['GOOGLE_APPLICATION_CREDENTIALS_JSON'] = '''
-{
-  "type": "service_account",
-  "project_id": "speech-analyzer-project",
-  "private_key_id": "key_id",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n",
-  "client_email": "speech-service@speech-analyzer-project.iam.gserviceaccount.com",
-  "client_id": "123456789",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs"
-}
-'''
-
-# For now, we'll use the API key directly
+# Set up Google API key
 GOOGLE_API_KEY = "AIzaSyAfwOUx4w2yFcFgIi_alLNuzwKskGR7TSk"
+os.environ['GOOGLE_API_KEY'] = GOOGLE_API_KEY
 
 app = FastAPI(
     title="Speech Rate Analyzer API",
