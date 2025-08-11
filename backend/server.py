@@ -138,8 +138,44 @@ class SpeechRateAnalyzer:
         total_minutes = max(self.words_by_minute.keys()) + 1 if self.words_by_minute else 1
         return round(self.total_words / total_minutes) if total_minutes > 0 else 0
 
-# Global analyzer instance
-analyzer = SpeechRateAnalyzer()
+async def transcribe_audio_with_google_api(audio_data: bytes, language_code: str = "en-US") -> Dict[str, Any]:
+    """Transcribe audio using Google Speech-to-Text REST API"""
+    try:
+        # Convert audio data to base64
+        audio_base64 = base64.b64encode(audio_data).decode('utf-8')
+        
+        # Google Speech-to-Text REST API URL
+        url = f"https://speech.googleapis.com/v1/speech:recognize?key={GOOGLE_API_KEY}"
+        
+        # Request payload
+        data = {
+            "config": {
+                "encoding": "WEBM_OPUS",
+                "sampleRateHertz": 48000,
+                "languageCode": language_code,
+                "enableWordTimeOffsets": True,
+                "enableAutomaticPunctuation": True,
+                "model": "latest_short",
+                "useEnhanced": True
+            },
+            "audio": {
+                "content": audio_base64
+            }
+        }
+        
+        # Make API call
+        response = requests.post(url, json=data, headers={'Content-Type': 'application/json'})
+        
+        if response.status_code == 200:
+            result = response.json()
+            return result
+        else:
+            logger.error(f"Google API error: {response.status_code} - {response.text}")
+            return {"error": f"API error: {response.status_code}"}
+            
+    except Exception as e:
+        logger.error(f"Transcription error: {str(e)}")
+        return {"error": str(e)}
 
 @app.get("/api/health")
 async def health_check():
