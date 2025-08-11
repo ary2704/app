@@ -177,6 +177,9 @@ async def transcribe_audio_with_google_api(audio_data: bytes, language_code: str
         logger.error(f"Transcription error: {str(e)}")
         return {"error": str(e)}
 
+# Global analyzer instance
+analyzer = SpeechRateAnalyzer()
+
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
