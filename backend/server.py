@@ -226,10 +226,7 @@ async def websocket_transcribe(websocket: WebSocket):
                     # Only transcribe if we have sufficient audio data (avoid too many API calls)
                     if len(audio_data) > 1000:  # At least 1KB of audio data
                         # Transcribe using Google Speech API
-                        result = await asyncio.get_event_loop().run_in_executor(
-                            None, 
-                            lambda: asyncio.run(transcribe_audio_with_google_api(audio_data, language_code))
-                        )
+                        result = await transcribe_audio_with_google_api(audio_data, language_code)
                         
                         if "error" not in result and result.get("results"):
                             for speech_result in result["results"]:
