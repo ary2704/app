@@ -217,14 +217,42 @@ async def websocket_transcribe(websocket: WebSocket):
                     # Decode base64 audio data
                     audio_data = base64.b64decode(message["data"])
                     
-                    # For now, simulate transcription (replace with actual Google Speech API call)
-                    # In real implementation, you would use Google Speech-to-Text API here
-                    await websocket.send_text(json.dumps({
-                        "type": "transcript",
-                        "transcript": "Sample transcription text",
-                        "is_final": True,
-                        "timestamp": datetime.now().timestamp()
-                    }))
+                    # Get language code from session
+                    language_code = message.get("language", "en-US")
+                    
+                    # Only transcribe if we have sufficient audio data (avoid too many API calls)
+                    if len(audio_data) > 1000:  # At least 1KB of audio data
+                        # Transcribe using Google Speech API
+                        result = await asyncio.get_event_loop().run_in_executor(
+                            None, 
+                            lambda: asyncio.run(transcribe_audio_with_google_api(audio_data, language_code))
+                        )
+                        
+                        if "error" not in result and result.get("results"):
+                            for speech_result in result["results"]:
+                                alternative = speech_result["alternatives"][0]
+                                transcript = alternative.get("transcript", "")
+                                confidence = alternative.get("confidence", 0.0)
+                                
+                                if transcript.strip():
+                                    # Add to analyzer
+                                    current_time = datetime.now().timestamp()
+                                    analyzer.add_words(transcript, current_time)
+                                    
+                                    # Send transcript to client
+                                    await websocket.send_text(json.dumps({
+                                        "type": "transcript",
+                                        "transcript": transcript,
+                                        "is_final": True,
+                                        "confidence": confidence,
+                                        "timestamp": current_time,
+                                        "words": alternative.get("words", [])
+                                    }))
+                        elif "error" in result:
+                            await websocket.send_text(json.dumps({
+                                "type": "error", 
+                                "message": result["error"]
+                            }))
                     
                 except Exception as e:
                     logger.error(f"Audio processing error: {str(e)}")
