@@ -1,12 +1,13 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from google.cloud import speech
 import asyncio
 import json
 import base64
 import os
 import re
 import logging
+import tempfile
+import requests
 from typing import List, Dict, Any
 from datetime import datetime
 
@@ -33,12 +34,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Google Speech client
-try:
-    speech_client = speech.SpeechClient()
-except Exception as e:
-    logger.error(f"Failed to initialize Speech client: {e}")
-    speech_client = None
+# Initialize Google Speech client (using REST API instead of client library)
+speech_client = None  # Will use REST API calls instead
 
 # Sample stories
 STORIES = {
